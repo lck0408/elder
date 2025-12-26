@@ -31,7 +31,7 @@
             connectTimeout: 30 * 1000
         }
         
-        var mqtt_client = mqtt.connect('wss://broker.mqttgo.io:8084/mqtt',options);
+        var mqtt_client = mqtt.connect('wss://broker.mqttgo.io:1883/mqtt',options);
         mqtt_client.on("connect", ()=>{
             console.log("connected");
             
