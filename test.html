@@ -3,29 +3,24 @@
 <head>
 <meta charset="utf-8">
 <title>ESP32 MQTT CAM</title>
-
 <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+
+<style>
+#img {
+  width: 640px;
+  height: 480px;
+  object-fit: contain;
+  border: 3px solid #0f0;
+}
+</style>
 </head>
 
 <body style="background:black;color:white;text-align:center">
-<h2>ESP32 Camera</h2>
-<img id="img" width="640">
+<h2>ESP32 Camera (640×480)</h2>
+<img id="img">
 
 <script>
-const clientId = "web_" + Math.random().toString(16).substr(2, 8);
-
-const client = mqtt.connect(
-  "wss://mqttgo.io:8084/mqtt",
-  {
-    clientId: clientId,
-    keepalive: 60,
-    clean: true,
-    reconnectPeriod: 1000
-  }
-);
-
-let chunks = [];
-let lastTime = Date.now();
+const client = mqtt.connect("wss://mqttgo.io:8084/mqtt");
 
 client.on("connect", () => {
   console.log("MQTT connected");
@@ -33,17 +28,8 @@ client.on("connect", () => {
 });
 
 client.on("message", (topic, payload) => {
-  chunks.push(payload);
-
-  // 200ms 一張（對應你 ESP32 設定）
-  if (Date.now() - lastTime > 180) {
-    const blob = new Blob(chunks, { type: "image/jpeg" });
-    const url = URL.createObjectURL(blob);
-    document.getElementById("img").src = url;
-
-    chunks = [];
-    lastTime = Date.now();
-  }
+  const blob = new Blob([payload], { type: "image/jpeg" });
+  document.getElementById("img").src = URL.createObjectURL(blob);
 });
 </script>
 </body>
