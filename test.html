@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<title>ESP32 MQTT Camera</title>
+
+<script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+
+<style>
+  body {
+    background: #111;
+    color: #fff;
+    text-align: center;
+    font-family: Arial;
+  }
+  img {
+    width: 640px;
+    border: 3px solid #0f0;
+  }
+</style>
+</head>
+
+<body>
+<h2>ESP32 即時影像（MQTT）</h2>
+<img id="cam" />
+
+<script>
+const client = mqtt.connect('ws://mqttgo.io:8083/mqtt');
+
+const topic = 'kfsh_lck/elder/cam';
+let chunks = [];
+let lastTime = Date.now();
+
+client.on('connect', () => {
+  console.log('MQTT connected');
+  client.subscribe(topic);
+});
+
+client.on('message', (topic, payload) => {
+  // payload 是 Uint8Array
+  chunks.push(payload);
+
+  // 簡單用時間切 frame（ESP32 每 200ms 一張）
+  if (Date.now() - lastTime > 180) {
+    const blob = new Blob(chunks, { type: 'image/jpeg' });
+    document.getElementById('cam').src = URL.createObjectURL(blob);
+    chunks = [];
+    lastTime = Date.now();
+  }
+});
+</script>
+
+</body>
+</html>
