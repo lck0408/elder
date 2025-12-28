@@ -1,54 +1,50 @@
 <!DOCTYPE html>
-<html lang="zh-TW">
+<html>
 <head>
-<meta charset="UTF-8">
-<title>ESP32 MQTT Camera</title>
+<meta charset="utf-8">
+<title>ESP32 MQTT CAM</title>
 
 <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
-
-<style>
-  body {
-    background: #111;
-    color: #fff;
-    text-align: center;
-    font-family: Arial;
-  }
-  img {
-    width: 640px;
-    border: 3px solid #0f0;
-  }
-</style>
 </head>
 
-<body>
-<h2>ESP32 即時影像（MQTT）</h2>
-<img id="cam" />
+<body style="background:black;color:white;text-align:center">
+<h2>ESP32 Camera</h2>
+<img id="img" width="640">
 
 <script>
-const client = mqtt.connect('ws://mqttgo.io:8083/mqtt');
+const clientId = "web_" + Math.random().toString(16).substr(2, 8);
 
-const topic = 'kfsh_lck/elder/cam';
+const client = mqtt.connect(
+  "wss://mqttgo.io:8084/mqtt",
+  {
+    clientId: clientId,
+    keepalive: 60,
+    clean: true,
+    reconnectPeriod: 1000
+  }
+);
+
 let chunks = [];
 let lastTime = Date.now();
 
-client.on('connect', () => {
-  console.log('MQTT connected');
-  client.subscribe(topic);
+client.on("connect", () => {
+  console.log("MQTT connected");
+  client.subscribe("kfsh_lck/elder/cam");
 });
 
-client.on('message', (topic, payload) => {
-  // payload 是 Uint8Array
+client.on("message", (topic, payload) => {
   chunks.push(payload);
 
-  // 簡單用時間切 frame（ESP32 每 200ms 一張）
+  // 200ms 一張（對應你 ESP32 設定）
   if (Date.now() - lastTime > 180) {
-    const blob = new Blob(chunks, { type: 'image/jpeg' });
-    document.getElementById('cam').src = URL.createObjectURL(blob);
+    const blob = new Blob(chunks, { type: "image/jpeg" });
+    const url = URL.createObjectURL(blob);
+    document.getElementById("img").src = url;
+
     chunks = [];
     lastTime = Date.now();
   }
 });
 </script>
-
 </body>
 </html>
